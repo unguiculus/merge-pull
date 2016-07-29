@@ -13,7 +13,7 @@ You can work around this limitation by pushing the feature branch the pull reque
 was created from directly to the target branch. Bitbucket recognizes this and
 closes the pull request automatically. This also gives us rebase and squash
 options. We create pull requests, keep committing on them until everything is nice
-and polished, and then squash the feature branch, force-push the squashed commit
+and polished, and then squash the feature branch and force-push the squashed commit
 to the feature branch and the target branch.
 
 [source]
