@@ -103,7 +103,8 @@ else:
         print ''
         print '----'
 
-        if assume_yes or 'y' == raw_input('Re-use the this message (Y/n): ').lower():
+        if assume_yes or 'y' == raw_input('Re-use the this message (No): ').lower():
+            print 'Re-using commit messsage...'
             message = msg_of_first_commit
         else:
             print 'Enter/paste your message. Hit Ctrl-D to save it.'
