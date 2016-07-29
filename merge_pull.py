@@ -103,7 +103,7 @@ else:
         print ''
         print '----'
 
-        if assume_yes or 'y' == raw_input('Re-use the this message (No): ').lower():
+        if assume_yes or 'y' == raw_input('Re-use the this message (y/N): ').lower():
             print 'Re-using commit messsage...'
             message = msg_of_first_commit
         else:
@@ -131,7 +131,7 @@ git('checkout', target_branch)
 print 'Pulling in upstream changes...'
 git('pull', remote, target_branch, '--rebase')
 
-if assume_yes or 'y' == raw_input('Delete feature branches (No): ').lower():
+if assume_yes or 'y' == raw_input('Delete feature branches (y/N): ').lower():
     print 'Deleting feature branch...'
     git('branch', '-d', feature_branch)
 
