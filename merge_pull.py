@@ -131,10 +131,11 @@ git('checkout', target_branch)
 print 'Pulling in upstream changes...'
 git('pull', remote, target_branch, '--rebase')
 
-print 'Deleting feature branch...'
-git('branch', '-d', feature_branch)
+if assume_yes or 'y' == raw_input('Delete feature branches (No): ').lower():
+    print 'Deleting feature branch...'
+    git('branch', '-d', feature_branch)
 
-print 'Deleting feature branch on server...'
-git('push', remote, feature_branch, '--delete')
+    print 'Deleting feature branch on server...'
+    git('push', remote, feature_branch, '--delete')
 
 print 'Good bye.'
