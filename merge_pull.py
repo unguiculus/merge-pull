@@ -58,7 +58,7 @@ def git(*arguments):
             break
 
         line = line.rstrip()
-        print 'git> %s' % line#
+        print 'git> %s' % line
         output.append(line)
 
     print ''
