@@ -20,6 +20,8 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from subprocess import Popen, STDOUT, PIPE
 from textwrap import dedent
 
+import sys
+
 desc = dedent('''
         Merges a Bitbucket pull request. Multiple commits are squashed. The
         commits are then rebased on top of upstream changes and pushed directly
@@ -62,7 +64,11 @@ def git(*arguments):
         output.append(line)
 
     print ''
-    proc.wait()
+    return_code = proc.wait()
+    if return_code != 0:
+        print ''
+        print 'Git command terminated with exit code %d.' % return_code
+        sys.exit(1)
 
     # We are only interested in the first line
     return output and output[0] or None
@@ -75,7 +81,8 @@ feature_branch_ref = git('rev-parse', feature_branch)
 print 'Merging pull request for branch %s with target branch %s...' % (feature_branch, target_branch)
 
 if target_branch_ref == feature_branch_ref:
-    raise ValueError, 'Target branch and HEAD point to the same ref. Make sure you are on your feature branch.'
+    print 'Target branch and HEAD point to the same ref. Make sure you are on your feature branch.'
+    sys.exit(1)
 
 print 'Fetching upstream changes...'
 git('fetch', remote)
