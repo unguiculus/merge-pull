@@ -70,13 +70,12 @@ def git(*arguments):
         print 'Git command terminated with exit code %d.' % return_code
         sys.exit(1)
 
-    # We are only interested in the first line
-    return output and output[0] or None
+    return output
 
 target_branch_remote = '%s/%s' % (remote, target_branch)
-feature_branch = git('rev-parse', '--abbrev-ref', '--verify', 'HEAD')
-target_branch_ref = git('rev-parse', target_branch)
-feature_branch_ref = git('rev-parse', feature_branch)
+feature_branch = git('rev-parse', '--abbrev-ref', '--verify', 'HEAD')[0]
+target_branch_ref = git('rev-parse', target_branch)[0]
+feature_branch_ref = git('rev-parse', feature_branch)[0]
 
 print 'Merging pull request for branch %s with target branch %s...' % (feature_branch, target_branch)
 
@@ -87,14 +86,15 @@ if target_branch_ref == feature_branch_ref:
 print 'Fetching upstream changes...'
 git('fetch', remote)
 
-commit_count = int(git('rev-list', '--count', '%s..HEAD' % target_branch_remote))
-if commit_count == 1:
+first_commit_on_branch = git('rev-list', '--reverse', 'HEAD...%s' % target_branch_remote)[0]
+head_sha1 = git('rev-parse', 'HEAD')[0]
+commit_count = int(git('rev-list', '--count', '%s...HEAD' % target_branch_remote)[0])
+
+if commit_count == 1 and first_commit_on_branch == head_sha1:
     print 'Rebasing commit...'
     git('rebase', target_branch_remote)
 else:
-    merge_base = git('merge-base', 'HEAD', target_branch_remote)
-    first_commit_on_branch = git('rev-list', '%s..HEAD' % merge_base, '--reverse')
-    msg_of_first_commit = git('show', '--no-patch', '--format=%B', first_commit_on_branch)
+    msg_of_first_commit = '\n'.join(git('show', '--no-patch', '--format=%B', first_commit_on_branch))
 
     print 'Merging in upstream changes...'
     git('merge', target_branch_remote)
