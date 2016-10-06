@@ -122,7 +122,7 @@ else:
                 except EOFError:
                     break
                 contents.append(line)
-            message = '\n'.join(line for line in contents)
+            message = '\n'.join(contents)
 
     git('commit', '-m', message)
 
