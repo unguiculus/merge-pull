@@ -93,7 +93,7 @@ commits = git('rev-list', '--left-right', '--reverse', 'HEAD...%s' % target_bran
 
 # Since we retrieved the list in reverse order, we need to look for the first commit on our side (left)
 # and strip off the '<' sign.
-first_commit_on_branch = [commit for commit in commits if commit.startswith('<')][0][1:]
+first_commit_on_branch = next(commit for commit in commits if commit.startswith('<'))[1:]
 head_sha1 = git('rev-parse', 'HEAD')[0]
 
 # If the identified commit is the same as HEAD, we know there is only one commit and simply rebase the branch.
