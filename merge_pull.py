@@ -16,11 +16,10 @@
 # limitations under the License.
 #
 
+import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from subprocess import Popen, STDOUT, PIPE
 from textwrap import dedent
-
-import sys
 
 desc = dedent('''
         Merges a Bitbucket pull request. Multiple commits are squashed. The
@@ -32,9 +31,9 @@ desc = dedent('''
 args_parser = ArgumentParser(description=desc, formatter_class=ArgumentDefaultsHelpFormatter)
 args_parser.add_argument('--target-branch', '-t', default='master', help='The target_branch of the pull request')
 args_parser.add_argument('--remote', '-r', default='origin', help='The name of the remote')
-args_parser.add_argument('--message', '-m', help='If commits need to be squashed, a commit message for ' + 
-                         'the final commit is required. You will be prompted to re-use the message of the ' +
-                         'first commit on the feature branch. You may then decide to enter a different message')
+args_parser.add_argument('--message', '-m', help='If commits need to be squashed, a commit message for ' +
+                                                 'the final commit is required. You will be prompted to re-use the message of the ' +
+                                                 'first commit on the feature branch. You may then decide to enter a different message')
 args_parser.add_argument('--assume-yes', '-y', action="store_true", help='Automatic yes to prompts')
 
 args = args_parser.parse_args()
@@ -43,6 +42,7 @@ target_branch = args.target_branch
 remote = args.remote
 message = args.message
 assume_yes = args.assume_yes
+
 
 def git(*arguments):
     cmdline = ['git']
@@ -72,6 +72,7 @@ def git(*arguments):
 
     return output
 
+
 target_branch_remote = '%s/%s' % (remote, target_branch)
 feature_branch = git('rev-parse', '--abbrev-ref', '--verify', 'HEAD')[0]
 target_branch_ref = git('rev-parse', target_branch)[0]
@@ -86,11 +87,18 @@ if target_branch_ref == feature_branch_ref:
 print 'Fetching upstream changes...'
 git('fetch', remote)
 
-first_commit_on_branch = git('rev-list', '--reverse', 'HEAD...%s' % target_branch_remote)[0]
-head_sha1 = git('rev-parse', 'HEAD')[0]
-commit_count = int(git('rev-list', '--count', '%s...HEAD' % target_branch_remote)[0])
+# We need to get a full rev-list using the '...' notation in order to account for
+# merges of the target branch into our feature branch.
+commits = git('rev-list', '--left-right', '--reverse', 'HEAD...%s' % target_branch_remote)
 
-if commit_count == 1 and first_commit_on_branch == head_sha1:
+# Since we retrieved the list in reverse order, we need to look for the first commit on our side (left)
+# and strip off the '<' sign.
+first_commit_on_branch = [commit for commit in commits if commit.startswith('<')][0][1:]
+head_sha1 = git('rev-parse', 'HEAD')[0]
+
+# If the identified commit is the same as HEAD, we know there is only one commit and simply rebase the branch.
+# Otherwise we merge and squash.
+if first_commit_on_branch == head_sha1:
     print 'Rebasing commit...'
     git('rebase', target_branch_remote)
 else:
