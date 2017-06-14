@@ -25,15 +25,17 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from subprocess import Popen, STDOUT, PIPE
 
 args_parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter, description='''
-    Merges a Bitbucket pull request. Multiple commits are squashed. The commits are then rebased on top
-    of upstream changes and pushed directly to the feature branch and the target branch. Bitbucket regognizes this
-    and marks the pull request as merged. Then switches to the target branch and deletes the feature branch.''')
+    Merges a pull request. Multiple commits are squashed by default (may be turned off). The commits are then rebased 
+    on top of upstream changes and pushed directly to the feature branch and the target branch. This automatically
+    marks the pull request as merged. The script then switches to the target branch and optionally deletes the 
+    feature branch.''')
 args_parser.add_argument('--target-branch', '-t', default='master', help='The target_branch of the pull request')
 args_parser.add_argument('--remote', '-r', default='origin', help='The name of the remote')
 args_parser.add_argument('--message', '-m', help='''If commits need to be squashed, a commit message for the final
     commit is required. You will be prompted to re-use the message of the first commit on the feature branch. You may
     then decide to enter a different message''')
 args_parser.add_argument('--assume-yes', '-y', action="store_true", help='Automatic yes to prompts')
+args_parser.add_argument('--no-squash', '-n', action="store_true", help='Do not squash commits')
 
 args = args_parser.parse_args()
 
@@ -41,6 +43,7 @@ target_branch = args.target_branch
 remote = args.remote
 message = args.message
 assume_yes = args.assume_yes
+no_squash = args.no_squash
 
 
 def git(*arguments):
@@ -97,7 +100,7 @@ head_sha1 = git('rev-parse', 'HEAD')[0]
 
 # If the identified commit is the same as HEAD, we know there is only one commit and simply rebase the branch.
 # Otherwise we merge and squash.
-if first_commit_on_branch == head_sha1:
+if first_commit_on_branch == head_sha1 or no_squash:
     print('Rebasing commit(s)...')
     git('rebase', target_branch_remote)
 else:
