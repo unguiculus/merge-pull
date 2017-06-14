@@ -1,31 +1,52 @@
-= Python script for merging Bitbucket pull requests
+= Python script for merging pull requests
+:tip-caption: :bulb:
 
-One of the projects I'm working on uses Bitbucket Cloud. Changes are made via
-pull requests. Unfortunately, Bitbucket only does non-fastforward merges when
-you merge a pull request via web interface, even if it is only one commit that
-needs to be merged. There is no rebase or squash option. We don't like this
-because it clutters up the history with lots of unnecessary merge commits
-that do not add any value. There may be cases when you want to merge a series
-of commits explicitly, but most of the time, this is not what we want. We
-prefer to have a nice and mostly linear history.
+One of the projects I'm working on uses Bitbucket Cloud. Changes are made via pull requests. Unfortunately, Bitbucket
+only does non-fastforward merges when you merge a pull request via web interface, even if it is only one commit that
+needs to be merged. There is no rebase or squash option. We don't like this because it clutters up the history with
+lots of unnecessary merge commits that do not add any value. There may be cases when you want to merge a series
+of commits explicitly, but most of the time, this is not what we want. We prefer to have a nice and mostly linear
+history.
 
-You can work around this limitation by pushing the feature branch the pull request
-was created from directly to the target branch. Bitbucket recognizes this and
-closes the pull request automatically. This also gives us rebase and squash
-options. We create pull requests, keep committing on them until everything is nice
-and polished, and then squash the feature branch and force-push the squashed commit
-to the feature branch and the target branch.
+You can work around this limitation by pushing the feature branch the pull request was created from directly to the
+target branch. Bitbucket recognizes this and closes the pull request automatically. This also gives us rebase and
+squash options. We create pull requests, keep committing on them until everything is nice and polished, and then squash
+the feature branch and force-push the squashed commit to the feature branch and the target branch.
+
+While the script was originally developed for Bitbucket Cloud, it can be used for Github as well. The same principles
+apply.
+
+TIP: *Update:* +
+Meanwhile, Bitbucket has a squash option. What it still lacks is an option to rebase and merge without squashing,
+which would then be a fast-forward merge without merge commit.
+
+== Features
+
+* Rebase and merge pull requests optionally squashing commits
+* When squashing commits, the scripts optionally finds the message of the first commit on the pull request and uses
+  that for the squashed commit
+* After merging, the script switches to the target branch and optionally deletes the feature branch
+  (locally and on the remote)
+* Never creates a merge commit. If you want that, use Github's or Bitbucket's standard workflow
+* Tested to work with Bitbucket Cloud and Github
+
+== Python Compatibility
+
+The script uses Python 3 by default but is compatible with Python 2.7.
+
+== Usage
 
 [source]
 ----
+$ merge_pull.py --help
 usage: merge_pull.py [-h] [--target-branch TARGET_BRANCH] [--remote REMOTE]
-                     [--message MESSAGE] [--assume-yes]
+                     [--message MESSAGE] [--assume-yes] [--no-squash]
 
-Merges a Bitbucket pull request. Multiple commits are squashed. The commits
-are then rebased on top of upstream changes and pushed directly to the feature
-branch and the target branch. Bitbucket regognizes this and marks the pull
-request as merged. Then switches to the target branch and deletes the feature
-branch.
+Merges a pull request. Multiple commits are squashed by default (may be turned
+off). The commits are then rebased on top of upstream changes and pushed
+directly to the feature branch and the target branch. This automatically marks
+the pull request as merged. The script then switches to the target branch and
+optionally deletes the feature branch.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -41,6 +62,7 @@ optional arguments:
                         branch. You may then decide to enter a different
                         message (default: None)
   --assume-yes, -y      Automatic yes to prompts (default: False)
+  --no-squash, -n       Do not squash commits (default: False)
 ----
 
 
